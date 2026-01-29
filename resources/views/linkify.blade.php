@@ -58,9 +58,6 @@
 
                         <input type="url" name="original_url" class="form-control form-control-lg mb-3" placeholder="Paste your long URL here" required>
 
-                        {{-- <label class="small text-muted">Expiry (optional)</label>
-                        <input type="datetime-local" name="expires_at" class="form-control mb-3"> --}}
-
                         <button type="submit" class="btn btn-primary btn-lg w-100">
                             Shorten URL
                         </button>
@@ -106,11 +103,6 @@
                                         </a>
                                     </td>
                                     <td>{{ $link->clicks }}</td>
-                                    {{-- <td>
-                                        {{ $link->expires_at
-                                            ? $link->expires_at->format('d M Y, h:i a')
-                                            : 'Never' }}
-                                    </td> --}}
                                 </tr>
                                 @endforeach
                             </tbody>
