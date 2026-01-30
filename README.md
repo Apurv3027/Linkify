@@ -1,7 +1,24 @@
 # 🔗 Linkify — URL Shortener & File Sharing Platform
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-success)](https://linkify-master-nsmfrc.laravel.cloud/)
+
 Linkify is a clean, lightweight URL shortener built with **Laravel** that allows users to generate short links for long URLs or uploaded files (images & videos).  
-Designed with a modern UI and simple workflow, Linkify is ideal as a **portfolio project** or foundation for a SaaS product.
+Designed with a modern UI and simple workflow, Linkify is ideal as a **portfolio project** or a foundation for a SaaS application.
+
+<!-- --- -->
+
+## 🌐 Live Demo
+
+Try the application live without any setup:
+
+🔗 **Linkify Demo**  
+👉 https://linkify-master-nsmfrc.laravel.cloud/
+
+### What you can test
+- Shorten long URLs
+- Upload images or videos and get shareable links
+- Track click counts in real time
+- Experience the responsive, modern UI
 
 <!-- --- -->
 
