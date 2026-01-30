@@ -1,52 +1,109 @@
-# 🔗 Linkify
+# 🔗 Linkify — URL Shortener & File Sharing Platform
 
-**Linkify** is a lightweight and modern URL shortener built using **Laravel**.  
-It allows users to convert long URLs into short, shareable links with analytics, expiry support.
+Linkify is a clean, lightweight URL shortener built with **Laravel** that allows users to generate short links for long URLs or uploaded files (images & videos).  
+Designed with a modern UI and simple workflow, Linkify is ideal as a **portfolio project** or foundation for a SaaS product.
 
----
+<!-- --- -->
 
-## 🚀 Features
+## ✨ Features
 
-- Shorten long URLs into clean, unique links
-- Redirect short URLs to original destinations
-- Optional link expiry
-- Soft-delete expired links
-- Click tracking analytics
-- Clean & responsive UI (Bootstrap)
-- Portfolio-ready project structure
+- 🔗 Shorten long URLs instantly
+- 📁 Upload images & videos and generate shareable links
+- 📊 Track click counts for each short link
+- 🖼 Preview support for uploaded images
+- 🎥 Video file linking
+- 📱 Fully responsive UI (Bootstrap 5)
+- ⚡ Fast & lightweight Laravel backend
 
----
+<!-- --- -->
 
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
 
-- **Backend:** Laravel
-- **Frontend:** Blade + Bootstrap
-- **Database:** MySQL
+- **Backend:** Laravel  
+- **Frontend:** Blade + Bootstrap 5  
+- **Database:** MySQL  
+- **Storage:** Laravel File Storage  
+- **Styling:** Custom CSS + Bootstrap  
+- **Security:** CSRF protection, file validation
 
----
+<!-- --- -->
 
-## ⚙️ Installation
+## 🚀 Getting Started
 
+Follow the steps below to run the project locally.
+
+### 1️⃣ Clone the repository
 ```bash
 git clone https://github.com/your-username/linkify.git
 cd linkify
+```
+
+### 2️⃣ Install dependencies
+```bash
 composer install
+```
+
+### 3️⃣ Environment setup
+```bash
 cp .env.example .env
 php artisan key:generate
+```
+
+### Update .env with your database credentials:
+```bash
+DB_DATABASE=linkify
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### 4️⃣ Run migrations
+```bash
 php artisan migrate
+```
+
+### 5️⃣ Create storage symlink
+```bash
+php artisan storage:link
+```
+
+### 6️⃣ Start the development server
+```bash
 php artisan serve
 ```
 
----
+### Visit the app at:
+👉 http://127.0.0.1:8000
 
-## 💼 Interview Power Line (use this 😉)
+<!-- --- -->
 
-> “I built a Laravel-based URL shortener, link expiry, soft deletes, and an analytics dashboard.”
+## 📂 Project Structure
+```bash
+app/
+ ├── Http/Controllers/LinkController.php
+ ├── Models/Link.php
+routes/
+ ├── web.php
+resources/views/
+ ├── linkify.blade.php
+storage/
+ ├── app/public
+ ```
 
-If you want, next I can:
-- add **auth + user dashboards**
-- build **REST APIs**
-- add **chart analytics**
-- prepare **resume bullets**
+<!-- --- -->
 
-Just say **“final polish”** 🚀
+## 📈 Future Enhancements
+
+- 👤 User authentication
+- 📊 Detailed analytics dashboard
+- 📱 QR code generation
+- 🌙 Dark mode UI
+- 🧠 Admin panel
+
+<!-- --- -->
+
+## 👨‍💻 Author
+
+**Apurv Patel** \
+Full-Stack Developer (Laravel | Flutter | Node.js)
+
+This project was built as a portfolio-ready application with clean UI and scalable backend architecture.
