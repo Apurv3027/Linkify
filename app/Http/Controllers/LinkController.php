@@ -32,17 +32,32 @@ class LinkController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'original_url' => 'required|url',
+            'original_url' => 'nullable|url',
+            'file' => 'nullable|mimes:jpg,jpeg,png,mp4,mov,avi|max:51200', // 50MB
         ]);
+
+        if (! $request->original_url && ! $request->file) {
+            return back()->withErrors('Please provide a URL or upload a file');
+        }
 
         do {
             $code = Str::random(6);
         } while (Link::where('short_code', $code)->exists());
 
-        $link = Link::create([
-            'original_url' => $request->original_url,
+        $data = [
             'short_code' => $code,
-        ]);
+            'type' => 'url',
+        ];
+
+        if ($request->file) {
+            $path = $request->file('file')->store('uploads', 'public');
+            $data['file_path'] = $path;
+            $data['type'] = 'file';
+        } else {
+            $data['original_url'] = $request->original_url;
+        }
+
+        Link::create($data);
 
         return redirect('/')
             ->with('shortUrl', url($code));
@@ -82,13 +97,12 @@ class LinkController extends Controller
 
     public function redirect($code)
     {
-        $link = Link::where('short_code', $code)->first();
-
-        if (! $link) {
-            abort(404, 'Link not found.');
-        }
-
+        $link = Link::where('short_code', $code)->firstOrFail();
         $link->increment('clicks');
+
+        if ($link->type === 'file') {
+            return redirect(asset('storage/'.$link->file_path));
+        }
 
         return redirect()->away($link->original_url);
     }

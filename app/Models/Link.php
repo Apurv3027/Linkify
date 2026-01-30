@@ -13,6 +13,8 @@ class Link extends Model
         'original_url',
         'short_code',
         'clicks',
+        'file_path',
+        'type',
     ];
 
     protected $casts = [

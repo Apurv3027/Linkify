@@ -15,58 +15,87 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 24px;
         }
 
         .card {
-            border-radius: 20px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            border-radius: 18px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            border: none;
         }
 
         .brand {
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
             color: #4f46e5;
         }
 
-        .copy-btn {
-            min-width: 90px;
+        .form-control-lg {
+            padding: 14px 16px;
+            font-size: 1rem;
         }
 
-        .qr-box img {
-            max-width: 180px;
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.95;
+        }
+
+        .copy-btn {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .table {
+            font-size: 0.9rem;
+        }
+
+        footer,
+        .text-white.small {
+            opacity: 0.9;
         }
 
     </style>
 </head>
 
 <body>
-    <div class="container px-3">
+    <div class="container px-3 my-4">
         <div class="row justify-content-center">
             <div class="col-md-7 col-lg-6">
 
                 <div class="card p-4">
                     <div class="text-center mb-3">
-                        <div class="brand">🔗 Linkify</div>
+                        <div class="brand">Linkify</div>
                         <p class="text-muted mb-0">
-                            A lightweight URL shortener built with Laravel
+                            Shorten links. Share smarter.
                         </p>
                     </div>
 
                     <!-- Shorten Form -->
-                    <form method="POST" action="/shorten">
+                    <form method="POST" action="/shorten" enctype="multipart/form-data">
                         @csrf
 
-                        <input type="url" name="original_url" class="form-control form-control-lg mb-3" placeholder="Paste your long URL here" required>
+                        <input type="url" name="original_url" class="form-control form-control-lg mb-3" placeholder="Paste a long URL to shorten">
+
+                        <div class="text-center text-muted mb-3 small">
+                            — or upload a file —
+                        </div>
+
+                        <input type="file" name="file" class="form-control mb-3" accept="image/*,video/*">
 
                         <button type="submit" class="btn btn-primary btn-lg w-100">
-                            Shorten URL
+                            Create Short Link
                         </button>
                     </form>
 
                     <!-- Short URL Result -->
                     @if(session('shortUrl'))
                     <div class="mt-4">
-                        <label class="fw-semibold">Short URL</label>
+                        <label class="fw-semibold mb-1">Your short link</label>
                         <div class="input-group mb-3">
                             <input id="shortUrl" class="form-control" value="{{ session('shortUrl') }}" readonly>
                             <button class="btn btn-outline-primary copy-btn" onclick="copyUrl()">
@@ -83,24 +112,49 @@
                     <!-- History Dashboard -->
                     @if(isset($links) && $links->count())
                     <hr class="my-4">
-                    <h5 class="fw-bold mb-3">Recent Links</h5>
+                    <h5 class="fw-bold mb-3">Recent activity</h5>
 
                     <div class="table-responsive">
                         <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th>Short</th>
+                                    <th>Short / Preview</th>
                                     <th>Clicks</th>
-                                    {{-- <th>Expiry</th> --}}
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($links as $link)
                                 <tr>
                                     <td>
-                                        <a href="{{ url($link->short_code) }}" target="_blank">
-                                            {{ $link->short_code }}
+                                        @if($link->type === 'file')
+                                        @php
+                                        $fileUrl = asset('storage/' . $link->file_path);
+                                        $extension = pathinfo($link->file_path, PATHINFO_EXTENSION);
+                                        @endphp
+
+                                        @if(in_array($extension, ['jpg', 'jpeg', 'png', 'webp']))
+                                        <!-- IMAGE PREVIEW -->
+                                        {{-- <a href="{{ url($link->short_code) }}" target="_blank">
+                                        <img src="{{ $fileUrl }}" alt="image" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                        </a> --}}
+                                        <a href="{{ url($link->short_code) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            🏙️ View Photo
                                         </a>
+                                        @else
+                                        <!-- VIDEO FILE -->
+                                        <a href="{{ url($link->short_code) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            🎥 View Video
+                                        </a>
+                                        @endif
+                                        @else
+                                        <!-- NORMAL URL -->
+                                        {{-- <a href="{{ url($link->short_code) }}" target="_blank">
+                                        {{ config('app.url') }}/{{ $link->short_code }}
+                                        </a> --}}
+                                        <a href="{{ url($link->short_code) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            🔗 View URL
+                                        </a>
+                                        @endif
                                     </td>
                                     <td>{{ $link->clicks }}</td>
                                 </tr>
@@ -112,7 +166,7 @@
                 </div>
 
                 <p class="text-center text-white small mt-3">
-                    © {{ date('Y') }} Linkify • Portfolio Project
+                    © {{ date('Y') }} Linkify • Built with Laravel
                 </p>
 
             </div>
