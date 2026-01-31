@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Link;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class LinkController extends Controller
@@ -40,11 +41,11 @@ class LinkController extends Controller
             'file' => 'nullable|mimes:jpg,jpeg,png,mp4,mov,avi|max:51200',
         ]);
 
-        if (! $request->original_url && ! $request->file) {
+        if (! $request->filled('original_url') && ! $request->hasFile('file')) {
             return back()->withErrors('Provide URL or file');
         }
 
-        if ($request->file && ! custom_user()) {
+        if ($request->hasFile('file') && ! custom_user()) {
             return redirect('/login')->withErrors('Login required');
         }
 
@@ -56,14 +57,22 @@ class LinkController extends Controller
         if (custom_user()) {
 
             $data = [
-                'user_id' => session('user_id'),
+                'user_id' => custom_user()->id,
                 'short_code' => $code,
                 'type' => 'url',
+                'clicks' => 0,
             ];
 
-            if ($request->file) {
-                $data['file_path'] = $request->file->store('uploads', 'public');
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $path = $file->store('uploads', 'public');
+                $size = $file->getSize(); // bytes
+
+                $data['file_path'] = $path;
                 $data['type'] = 'file';
+
+                // 📦 Track storage usage
+                custom_user()->increment('storage_used', $size);
             } else {
                 $data['original_url'] = $request->original_url;
             }
@@ -116,6 +125,25 @@ class LinkController extends Controller
             abort(403);
         }
 
+        // ✅ Only file links affect storage
+        if ($link->type === 'file' && $link->file_path && $link->user_id) {
+
+            $fullPath = storage_path('app/public/'.$link->file_path);
+
+            if (file_exists($fullPath)) {
+                $fileSize = filesize($fullPath); // bytes
+
+                // 📉 Reduce user storage
+                $user = custom_user();
+                if ($user) {
+                    $user->decrement('storage_used', $fileSize);
+                }
+
+                // ❌ Remove physical file
+                // unlink($fullPath);
+            }
+        }
+
         $link->delete();
 
         return back()->with('success', 'Link deleted successfully');
@@ -123,27 +151,37 @@ class LinkController extends Controller
 
     public function redirect($code)
     {
-        $link = Link::where('short_code', $code)->first();
+        $link = Link::where('short_code', $code)->firstOrFail();
 
-        if ($link) {
-            $link->increment('clicks');
+        // 📈 Increment click count
+        $link->increment('clicks');
 
-            return $link->type === 'file'
-                ? redirect(asset('storage/'.$link->file_path))
-                : redirect()->away($link->original_url);
+        // 📁 FILE → PREVIEW PAGE
+        if ($link->type === 'file') {
+            return redirect()->route('file.preview', $code);
         }
 
-        // SESSION LINKS
-        $guestLinks = session('guest_links', []);
-        foreach ($guestLinks as &$g) {
-            if ($g['short_code'] === $code) {
-                $g['clicks']++;
-                session(['guest_links' => $guestLinks]);
+        // 🌐 URL → Redirect
+        return redirect()->away($link->original_url);
+    }
 
-                return redirect()->away($g['original_url']);
-            }
-        }
+    public function preview($code)
+    {
+        $link = Link::where('short_code', $code)->firstOrFail();
 
-        abort(404);
+        $extension = strtolower(pathinfo($link->file_path, PATHINFO_EXTENSION));
+        $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'webp']);
+        $isVideo = in_array($extension, ['mp4', 'mov', 'avi']);
+
+        return view('file.preview', compact('link', 'isImage', 'isVideo'));
+    }
+
+    public function download($code)
+    {
+        $link = Link::where('short_code', $code)->firstOrFail();
+
+        $link->increment('downloads');
+
+        return response()->download(storage_path('app/public/'.$link->file_path));
     }
 }

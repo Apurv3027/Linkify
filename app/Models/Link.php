@@ -17,6 +17,7 @@ class Link extends Model
         'clicks',
         'file_path',
         'type',
+        'downloads',
     ];
 
     protected $casts = [

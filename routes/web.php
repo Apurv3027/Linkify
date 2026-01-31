@@ -25,6 +25,8 @@ Route::post('/logout', [AuthController::class, 'logout']);
     User Routes
 */
 Route::delete('/links/{link}', [LinkController::class, 'destroy'])->name('links.destroy');
+Route::get('/file/{code}', [LinkController::class, 'preview'])->name('file.preview');
+Route::get('/file/{code}/download', [LinkController::class, 'download'])->name('file.download');
 
 /*
     Redirect Short Code

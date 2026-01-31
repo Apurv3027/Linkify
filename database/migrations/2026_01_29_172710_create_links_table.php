@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('type')->default('url');
             $table->string('short_code')->unique();
             $table->integer('clicks')->default(0);
+            $table->integer('downloads')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });
