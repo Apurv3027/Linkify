@@ -21,9 +21,9 @@ Try the application live without any setup:
 👉 https://linkify-master-nsmfrc.laravel.cloud/
 
 ### What you can test
-- Shorten long URLs
-- Upload images or videos and get shareable links
-- Track click counts in real time
+- Shorten long URLs  
+- Upload images or videos and get shareable links  
+- Track click counts in real time  
 - Experience the responsive, modern UI
 
 <!-- --- -->
@@ -117,7 +117,7 @@ Your app should now be accessible at http://localhost:8000.
 
 <!-- --- -->
 
-## 📂 Project Structure
+<!-- ## 📂 Project Structure
 ```bash
 app/
  ├── Http/Controllers/LinkController.php
@@ -128,7 +128,7 @@ resources/views/
  ├── linkify.blade.php
 storage/
  ├── app/public
- ```
+ ``` -->
 
 <!-- --- -->
 
@@ -145,6 +145,7 @@ storage/
 | type         | text    | 'url' or 'file'                 |
 | short_code   | text    | Unique 6-character short code   |
 | clicks       | integer   | Number of clicks                |
+| downloads       | integer   | Number of downloads                |
 | created_at   | timestamp | Creation timestamp              |
 | updated_at   | timestamp | Last update timestamp           |
 | deleted_at   | timestamp | Soft delete timestamp           |
@@ -153,18 +154,22 @@ storage/
 
 ## 🛠 Usage
 
-- Open the app in browser
+- Open the app in your browser
 - Guest users can shorten URLs
 - Authenticated users can upload files and track links
 - Click “Delete” to remove a link (soft delete)
+- Copy short links using the clipboard button
 
 <!-- --- -->
 
 ## 💻 Frontend
 
-- Built using Bootstrap 5 for responsive design
+- Responsive, modern UI built with Bootstrap 5
 - Dashboard shows recent links with click count
+- Line chart showing clicks over time
+- Recent activity feed
 - Custom modal confirmation for deleting links
+- Pagination for links table
 
 <!-- --- -->
 
@@ -172,7 +177,7 @@ storage/
 
 - File uploads: jpg, jpeg, png, mp4, mov, avi
 - Max upload size: 50MB
-- Guests cannot upload files (prompted to log in)
+- Guests cannot upload files
 
 <!-- --- -->
 
