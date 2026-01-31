@@ -2,8 +2,14 @@
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-success)](https://linkify-master-nsmfrc.laravel.cloud/)
 
-Linkify is a clean, lightweight URL shortener built with **Laravel** that allows users to generate short links for long URLs or uploaded files (images & videos).  
-Designed with a modern UI and simple workflow, Linkify is ideal as a **portfolio project** or a foundation for a SaaS application.
+**Linkify** is a modern URL shortener built with **Laravel 12** and **Bootstrap 5.3.2**, featuring:
+
+- Shorten long URLs instantly  
+- Upload files (images & videos) and generate shareable short links  
+- User dashboard with recent links and click tracking  
+- Custom authentication (session-based)  
+- Soft delete links with confirmation modal  
+- Guest access for quick URL shortening
 
 <!-- --- -->
 
@@ -24,13 +30,19 @@ Try the application live without any setup:
 
 ## ✨ Features
 
-- 🔗 Shorten long URLs instantly
-- 📁 Upload images & videos and generate shareable links
-- 📊 Track click counts for each short link
-- 🖼 Preview support for uploaded images
-- 🎥 Video file linking
-- 📱 Fully responsive UI (Bootstrap 5)
-- ⚡ Fast & lightweight Laravel backend
+### Public Features
+
+- Shorten URLs without an account  
+- Guest session links (stored in session)  
+- Copy short link to clipboard  
+
+### Authenticated User Features
+
+- File uploads (image/video)  
+- Link management dashboard  
+- Track clicks per link  
+- Delete links with custom confirmation modal (soft delete)  
+- Restore deleted links (optional extension)
 
 <!-- --- -->
 
@@ -66,12 +78,14 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-### Update .env with your database credentials:
+- Set up database credentials in .env
+
+<!-- ### Update .env with your database credentials:
 ```bash
 DB_DATABASE=linkify
 DB_USERNAME=root
 DB_PASSWORD=
-```
+``` -->
 
 ### 4️⃣ Run migrations
 ```bash
@@ -88,8 +102,18 @@ php artisan storage:link
 php artisan serve
 ```
 
-### Visit the app at:
-👉 http://127.0.0.1:8000
+<!-- ### Visit the app at:
+👉 http://127.0.0.1:8000 -->
+
+Your app should now be accessible at http://localhost:8000.
+
+<!-- --- -->
+
+## 🔑 Authentication
+
+- Custom session-based authentication
+- Login stores user info in session (user_id, user_name)
+- Links are tied to the logged-in user
 
 <!-- --- -->
 
@@ -108,13 +132,57 @@ storage/
 
 <!-- --- -->
 
+### 📂 Database Structure
+
+#### Links Table
+
+| Column       | Type      | Description                     |
+|------------- |---------- |--------------------------------|
+| id           | bigint    | Primary key                     |
+| user_id      | bigint    | Reference to the user (nullable) |
+| original_url | text      | Original URL (nullable if file) |
+| file_path    | text    | Uploaded file path (nullable)   |
+| type         | text    | 'url' or 'file'                 |
+| short_code   | text    | Unique 6-character short code   |
+| clicks       | integer   | Number of clicks                |
+| created_at   | timestamp | Creation timestamp              |
+| updated_at   | timestamp | Last update timestamp           |
+| deleted_at   | timestamp | Soft delete timestamp           |
+
+<!-- --- -->
+
+## 🛠 Usage
+
+- Open the app in browser
+- Guest users can shorten URLs
+- Authenticated users can upload files and track links
+- Click “Delete” to remove a link (soft delete)
+
+<!-- --- -->
+
+## 💻 Frontend
+
+- Built using Bootstrap 5 for responsive design
+- Dashboard shows recent links with click count
+- Custom modal confirmation for deleting links
+
+<!-- --- -->
+
+## 📝 Notes
+
+- File uploads: jpg, jpeg, png, mp4, mov, avi
+- Max upload size: 50MB
+- Guests cannot upload files (prompted to log in)
+
+<!-- --- -->
+
 ## 📈 Future Enhancements
 
-- 👤 User authentication
 - 📊 Detailed analytics dashboard
 - 📱 QR code generation
 - 🌙 Dark mode UI
 - 🧠 Admin panel
+- 🗑️ Restore soft deleted links
 
 <!-- --- -->
 
