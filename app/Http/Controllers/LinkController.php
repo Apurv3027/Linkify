@@ -14,13 +14,48 @@ class LinkController extends Controller
      */
     public function index()
     {
-        if (custom_user()) {
-            $links = Link::where('user_id', custom_user()->id)->latest()->get();
-
-            return view('dashboard', compact('links'));
+        if (! custom_user()) {
+            return view('home');
         }
 
-        return view('home');
+        $userId = custom_user()->id;
+
+        // Paginate links for table
+        $links = Link::where('user_id', $userId)->latest()->paginate(10);
+
+        // Stats
+        $totalLinks = Link::where('user_id', $userId)->count();
+        $totalClicks = Link::where('user_id', $userId)->sum('clicks');
+        $totalFiles = Link::where('user_id', $userId)->whereIn('type', ['file', 'image', 'video'])->count();
+
+        // Prepare clicks over time chart (last 7 days)
+        $last7Days = now()->subDays(6)->startOfDay();
+        $clicksData = Link::where('user_id', $userId)
+            ->where('created_at', '>=', $last7Days)
+            ->get()
+            ->groupBy(function ($link) {
+                return $link->created_at->format('Y-m-d');
+            })
+            ->map(function ($group) {
+                return $group->sum('clicks');
+            });
+
+        $chartLabels = [];
+        $chartValues = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $date = now()->subDays(6 - $i)->format('Y-m-d');
+            $chartLabels[] = $date;
+            $chartValues[] = $clicksData[$date] ?? 0;
+        }
+
+        // Recent activity
+        $recentLinks = Link::where('user_id', $userId)->latest()->take(5)->get();
+
+        return view('dashboard', compact(
+            'links', 'totalLinks', 'totalClicks', 'totalFiles',
+            'chartLabels', 'chartValues', 'recentLinks'
+        ));
     }
 
     /**
