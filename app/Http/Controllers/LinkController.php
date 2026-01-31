@@ -13,9 +13,13 @@ class LinkController extends Controller
      */
     public function index()
     {
-        $links = Link::latest()->take(10)->get();
+        if (custom_user()) {
+            $links = Link::where('user_id', custom_user()->id)->latest()->get();
 
-        return view('linkify', compact('links'));
+            return view('dashboard', compact('links'));
+        }
+
+        return view('home');
     }
 
     /**
@@ -33,34 +37,49 @@ class LinkController extends Controller
     {
         $request->validate([
             'original_url' => 'nullable|url',
-            'file' => 'nullable|mimes:jpg,jpeg,png,mp4,mov,avi|max:51200', // 50MB
+            'file' => 'nullable|mimes:jpg,jpeg,png,mp4,mov,avi|max:51200',
         ]);
 
         if (! $request->original_url && ! $request->file) {
-            return back()->withErrors('Please provide a URL or upload a file');
+            return back()->withErrors('Provide URL or file');
         }
 
-        do {
-            $code = Str::random(6);
-        } while (Link::where('short_code', $code)->exists());
+        if ($request->file && ! custom_user()) {
+            return redirect('/login')->withErrors('Login required');
+        }
 
-        $data = [
-            'short_code' => $code,
-            'type' => 'url',
-        ];
+        $code = Str::random(6);
 
-        if ($request->file) {
-            $path = $request->file('file')->store('uploads', 'public');
-            $data['file_path'] = $path;
-            $data['type'] = 'file';
+        // dd(custom_user());
+        // dd(session('user_id'));
+
+        if (custom_user()) {
+
+            $data = [
+                'user_id' => session('user_id'),
+                'short_code' => $code,
+                'type' => 'url',
+            ];
+
+            if ($request->file) {
+                $data['file_path'] = $request->file->store('uploads', 'public');
+                $data['type'] = 'file';
+            } else {
+                $data['original_url'] = $request->original_url;
+            }
+
+            // dd($data);
+
+            Link::create($data);
         } else {
-            $data['original_url'] = $request->original_url;
+            session()->push('guest_links', [
+                'short_code' => $code,
+                'original_url' => $request->original_url,
+                'clicks' => 0,
+            ]);
         }
 
-        Link::create($data);
-
-        return redirect('/')
-            ->with('shortUrl', url($code));
+        return back()->with('shortUrl', url($code));
     }
 
     /**
@@ -92,18 +111,39 @@ class LinkController extends Controller
      */
     public function destroy(Link $link)
     {
-        //
+        // Security check
+        if ($link->user_id !== custom_user()->id) {
+            abort(403);
+        }
+
+        $link->delete();
+
+        return back()->with('success', 'Link deleted successfully');
     }
 
     public function redirect($code)
     {
-        $link = Link::where('short_code', $code)->firstOrFail();
-        $link->increment('clicks');
+        $link = Link::where('short_code', $code)->first();
 
-        if ($link->type === 'file') {
-            return redirect(asset('storage/'.$link->file_path));
+        if ($link) {
+            $link->increment('clicks');
+
+            return $link->type === 'file'
+                ? redirect(asset('storage/'.$link->file_path))
+                : redirect()->away($link->original_url);
         }
 
-        return redirect()->away($link->original_url);
+        // SESSION LINKS
+        $guestLinks = session('guest_links', []);
+        foreach ($guestLinks as &$g) {
+            if ($g['short_code'] === $code) {
+                $g['clicks']++;
+                session(['guest_links' => $guestLinks]);
+
+                return redirect()->away($g['original_url']);
+            }
+        }
+
+        abort(404);
     }
 }

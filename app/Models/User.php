@@ -45,4 +45,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * A user can have many short links
+     */
+    public function links()
+    {
+        return $this->hasMany(Link::class);
+    }
 }
