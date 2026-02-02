@@ -1,15 +1,8 @@
-# 🔗 Linkify — URL Shortener & File Sharing Platform
+# 🔗 Linkify — URL & File Shortener with Analytics (Laravel)
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-success)](https://linkify-master-nsmfrc.laravel.cloud/)
 
-**Linkify** is a modern URL shortener built with **Laravel 12** and **Bootstrap 5.3.2**, featuring:
-
-- Shorten long URLs instantly  
-- Upload files (images & videos) and generate shareable short links  
-- User dashboard with recent links and click tracking  
-- Custom authentication (session-based)  
-- Soft delete links with confirmation modal  
-- Guest access for quick URL shortening
+**Linkify** is a modern **URL & File Shortening** application built with **Laravel**, featuring **click analytics**, **file previews**, **download tracking**, and a **live-updating dashboard** using Chart.js.
 
 <!-- --- -->
 
@@ -28,32 +21,83 @@ Try the application live without any setup:
 
 <!-- --- -->
 
-## ✨ Features
+## 🚀 Features
 
-### Public Features
+### 🔗 Short Links
+- Shorten long URLs into clean short links
+- Redirect safely using Laravel `redirect()->away()`
+- Track total clicks automatically
 
-- Shorten URLs without an account  
-- Guest session links (stored in session)  
-- Copy short link to clipboard  
+### 📁 File Shortener
+- Upload files and generate shareable short links
+- **Preview files without opening a new page**
+  - 🖼 Images (jpg, png, webp)
+  - 🎥 Videos (mp4, mov, avi)
+- Secure file downloads with download counter
 
-### Authenticated User Features
+### 📊 Analytics Dashboard
+- Total clicks & downloads
+- Click analytics for last 7 days
+- **Live chart updates without page refresh**
+- User-specific analytics
 
-- File uploads (image/video)  
-- Link management dashboard  
-- Track clicks per link  
-- Delete links with custom confirmation modal (soft delete)  
-- Restore deleted links (optional extension)
+### ⚡ Live Chart Updates
+- Chart.js + AJAX polling
+- Updates automatically every few seconds
+- No page reload required
 
 <!-- --- -->
 
 ## 🛠️ Tech Stack
 
-- **Backend:** Laravel  
-- **Frontend:** Blade + Bootstrap 5  
-- **Database:** MySQL  
-- **Storage:** Laravel File Storage  
-- **Styling:** Custom CSS + Bootstrap  
-- **Security:** CSRF protection, file validation
+| Layer        | Technology |
+|--------------|-----------|
+| Backend      | Laravel |
+| Frontend     | Blade |
+| Database     | MySQL |
+| Charts       | Chart.js |
+| Storage      | Local |
+| Auth         | Custom |
+
+<!-- --- -->
+
+## 🔄 Click Tracking Flow
+
+User clicks short link\
+↓
+Click stored in database\
+↓
+Dashboard fetches analytics via AJAX\
+↓
+Chart updates automatically
+
+<!-- --- -->
+
+## 🔥 Live Analytics API
+
+### Route
+
+```bash
+GET /analytics/clicks
+```
+
+### Response
+
+```bash
+{
+  "labels": ["2026-01-25", "2026-01-26", "2026-01-27"],
+  "values": [12, 18, 9]
+}
+```
+
+<!-- --- -->
+
+## 📊 Chart Implementation
+
+- Chart.js (Line chart)
+- AJAX polling every 5 seconds
+- User-specific data
+- Auto-refresh without reload
 
 <!-- --- -->
 
@@ -109,11 +153,11 @@ Your app should now be accessible at http://localhost:8000.
 
 <!-- --- -->
 
-## 🔑 Authentication
+<!-- ## 🔑 Authentication
 
 - Custom session-based authentication
 - Login stores user info in session (user_id, user_name)
-- Links are tied to the logged-in user
+- Links are tied to the logged-in user -->
 
 <!-- --- -->
 
@@ -132,7 +176,7 @@ storage/
 
 <!-- --- -->
 
-### 📂 Database Structure
+<!-- ### 📂 Database Structure
 
 #### Links Table
 
@@ -148,28 +192,28 @@ storage/
 | downloads       | integer   | Number of downloads                |
 | created_at   | timestamp | Creation timestamp              |
 | updated_at   | timestamp | Last update timestamp           |
-| deleted_at   | timestamp | Soft delete timestamp           |
+| deleted_at   | timestamp | Soft delete timestamp           | -->
 
 <!-- --- -->
 
-## 🛠 Usage
+<!-- ## 🛠 Usage
 
 - Open the app in your browser
 - Guest users can shorten URLs
 - Authenticated users can upload files and track links
 - Click “Delete” to remove a link (soft delete)
-- Copy short links using the clipboard button
+- Copy short links using the clipboard button -->
 
 <!-- --- -->
 
-## 💻 Frontend
+<!-- ## 💻 Frontend
 
 - Responsive, modern UI built with Bootstrap 5
 - Dashboard shows recent links with click count
 - Line chart showing clicks over time
 - Recent activity feed
 - Custom modal confirmation for deleting links
-- Pagination for links table
+- Pagination for links table -->
 
 <!-- --- -->
 
@@ -194,6 +238,14 @@ storage/
 ## 👨‍💻 Author
 
 **Apurv Patel** \
-Full-Stack Developer (Laravel | Flutter | Node.js)
+Full-Stack Developer (Laravel | Flutter | Node.js)\
+Building modern web & mobile experiences 🚀
 
-This project was built as a portfolio-ready application with clean UI and scalable backend architecture.
+<!-- --- -->
+
+## ⭐ Support
+
+If you find this project useful:
+- Star ⭐ the repository
+- Share with other developers
+- Fork & improve 🚀
