@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Link extends Model
 {
@@ -23,4 +23,9 @@ class Link extends Model
     protected $casts = [
         'clicks' => 'integer',
     ];
+
+    public function clicks()
+    {
+        return $this->hasMany(Click::class);
+    }
 }

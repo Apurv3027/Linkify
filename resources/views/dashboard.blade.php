@@ -203,7 +203,10 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <a href="{{ url($link->short_code) }}" target="_blank">{{ url($link->short_code) }}</a>
+                                            {{-- <a href="{{ url($link->short_code) }}" target="_blank">{{ url($link->short_code) }}</a> --}}
+                                            <a href="javascript:void(0)" onclick="openFile('{{ $link->short_code }}')">
+                                                {{ url($link->short_code) }}
+                                            </a>
                                             <button class="btn btn-outline-secondary btn-sm ms-2 btn-copy" data-link="{{ url($link->short_code) }}" title="Copy link">📋</button>
                                         </div>
                                     </td>
@@ -248,15 +251,15 @@
                         @forelse($recentLinks as $link)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <a href="{{ url($link->short_code) }}" target="_blank">{{ $link->short_code }}</a>
-                            <span class="badge bg-primary rounded-pill">{{ $link->created_at->diffForHumans() }}</span>
-                        </li>
-                        @empty
-                        <li class="list-group-item text-muted">No recent activity</li>
-                        @endforelse
-                    </ul>
-                </div> --}}
-            </div>
+                <span class="badge bg-primary rounded-pill">{{ $link->created_at->diffForHumans() }}</span>
+                </li>
+                @empty
+                <li class="list-group-item text-muted">No recent activity</li>
+                @endforelse
+                </ul>
+            </div> --}}
         </div>
+    </div>
     </div>
 
 
@@ -286,15 +289,25 @@
         </div>
     </div>
 
+    {{-- File Preview Modal --}}
+    <div class="modal fade" id="fileModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content p-4 text-center" id="fileContent">
+                Loading...
+            </div>
+        </div>
+    </div>
+
     <script>
         const ctx = document.getElementById('clicksChart').getContext('2d');
-        new Chart(ctx, {
+
+        const clicksChart = new Chart(ctx, {
             type: 'line'
             , data: {
-                labels: @json($chartLabels)
+                labels: @json($labels)
                 , datasets: [{
                     label: 'Clicks'
-                    , data: @json($chartValues)
+                    , data: @json($values)
                     , borderColor: '#4f46e5'
                     , backgroundColor: 'rgba(79,70,229,0.2)'
                     , tension: 0.3
@@ -311,11 +324,21 @@
                 , scales: {
                     y: {
                         beginAtZero: true
-                        , precision: 0
                     }
                 }
             }
         });
+
+        // 🔄 Poll every 5 seconds
+        setInterval(() => {
+            fetch("{{ route('analytics.clicks') }}")
+                .then(res => res.json())
+                .then(data => {
+                    clicksChart.data.labels = data.labels;
+                    clicksChart.data.datasets[0].data = data.values;
+                    clicksChart.update();
+                });
+        }, 5000);
 
         // Copy to clipboard
         document.querySelectorAll('.btn-copy').forEach(btn => {
@@ -332,6 +355,44 @@
         function openDeleteModal(id) {
             document.getElementById('deleteForm').action = `/links/${id}`;
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        function openFile(code) {
+            fetch('/' + code)
+                .then(res => res.json())
+                .then(data => {
+
+                    // URL redirect
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                        return;
+                    }
+
+                    let html = '';
+
+                    if (data.type === 'image') {
+                        html = `
+                    <img src="${data.url}" class="img-fluid rounded mb-3" style="max-height:320px">
+                `;
+                    } else {
+                        html = `
+                    <video src="${data.url}" controls class="w-100 rounded mb-3" style="max-height:320px"></video>
+                `;
+                    }
+
+                    html += `
+                <p class="text-muted">👁️ ${data.views} | ⬇ ${data.downloads}</p>
+                <a href="${data.downloadUrl}" class="btn btn-primary w-100 mt-2">
+                    ⬇ Download
+                </a>
+            `;
+
+                    document.getElementById('fileContent').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('fileModal')).show();
+                })
+                .catch(() => {
+                    alert('Failed to load preview');
+                });
         }
 
     </script>

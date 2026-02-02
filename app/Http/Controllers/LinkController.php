@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Click;
 use App\Models\Link;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,41 +21,41 @@ class LinkController extends Controller
 
         $userId = custom_user()->id;
 
-        // Paginate links for table
         $links = Link::where('user_id', $userId)->latest()->paginate(10);
 
-        // Stats
         $totalLinks = Link::where('user_id', $userId)->count();
         $totalClicks = Link::where('user_id', $userId)->sum('clicks');
-        $totalFiles = Link::where('user_id', $userId)->whereIn('type', ['file', 'image', 'video'])->count();
+        $totalFiles = Link::where('user_id', $userId)
+            ->where('type', 'file')
+            ->count();
 
-        // Prepare clicks over time chart (last 7 days)
-        $last7Days = now()->subDays(6)->startOfDay();
-        $clicksData = Link::where('user_id', $userId)
-            ->where('created_at', '>=', $last7Days)
-            ->get()
-            ->groupBy(function ($link) {
-                return $link->created_at->format('Y-m-d');
-            })
-            ->map(function ($group) {
-                return $group->sum('clicks');
-            });
+        // Click chart (last 7 days)
+        $labels = [];
+        $values = [];
 
-        $chartLabels = [];
-        $chartValues = [];
+        for ($i = 6; $i >= 0; $i--) {
+            // $date = now()->subDays($i)->format('Y-m-d');
+            $date = now()->subDays($i)->toDateString();
 
-        for ($i = 0; $i < 7; $i++) {
-            $date = now()->subDays(6 - $i)->format('Y-m-d');
-            $chartLabels[] = $date;
-            $chartValues[] = $clicksData[$date] ?? 0;
+            $labels[] = $date;
+            // $values[] = Link::where('user_id', $userId)
+            //     ->whereDate('created_at', $date)
+            //     ->sum('clicks');
+
+            $values[] = Click::whereDate('created_at', $date)
+                ->whereHas('link', function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                })
+                ->count();
         }
 
-        // Recent activity
-        $recentLinks = Link::where('user_id', $userId)->latest()->take(5)->get();
-
         return view('dashboard', compact(
-            'links', 'totalLinks', 'totalClicks', 'totalFiles',
-            'chartLabels', 'chartValues', 'recentLinks'
+            'links',
+            'totalLinks',
+            'totalClicks',
+            'totalFiles',
+            'labels',
+            'values'
         ));
     }
 
@@ -73,11 +74,11 @@ class LinkController extends Controller
     {
         $request->validate([
             'original_url' => 'nullable|url',
-            'file' => 'nullable|mimes:jpg,jpeg,png,mp4,mov,avi|max:51200',
+            'file' => 'nullable|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200',
         ]);
 
         if (! $request->filled('original_url') && ! $request->hasFile('file')) {
-            return back()->withErrors('Provide URL or file');
+            return back()->withErrors('Provide a URL or upload a file');
         }
 
         if ($request->hasFile('file') && ! custom_user()) {
@@ -86,42 +87,26 @@ class LinkController extends Controller
 
         $code = Str::random(6);
 
-        // dd(custom_user());
-        // dd(session('user_id'));
+        $data = [
+            'user_id' => custom_user()?->id,
+            'short_code' => $code,
+            'clicks' => 0,
+        ];
 
-        if (custom_user()) {
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('uploads', 'public');
 
-            $data = [
-                'user_id' => custom_user()->id,
-                'short_code' => $code,
-                'type' => 'url',
-                'clicks' => 0,
-            ];
+            $data['file_path'] = $path;
+            $data['type'] = 'file';
 
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $path = $file->store('uploads', 'public');
-                $size = $file->getSize(); // bytes
-
-                $data['file_path'] = $path;
-                $data['type'] = 'file';
-
-                // 📦 Track storage usage
-                custom_user()->increment('storage_used', $size);
-            } else {
-                $data['original_url'] = $request->original_url;
-            }
-
-            // dd($data);
-
-            Link::create($data);
+            // Track storage usage
+            custom_user()?->increment('storage_used', $request->file('file')->getSize());
         } else {
-            session()->push('guest_links', [
-                'short_code' => $code,
-                'original_url' => $request->original_url,
-                'clicks' => 0,
-            ]);
+            $data['original_url'] = $request->original_url;
+            $data['type'] = 'url';
         }
+
+        Link::create($data);
 
         return back()->with('shortUrl', url($code));
     }
@@ -155,28 +140,17 @@ class LinkController extends Controller
      */
     public function destroy(Link $link)
     {
-        // Security check
         if ($link->user_id !== custom_user()->id) {
             abort(403);
         }
 
-        // ✅ Only file links affect storage
-        if ($link->type === 'file' && $link->file_path && $link->user_id) {
+        // Reduce storage usage (safe for cloud)
+        if ($link->type === 'file' && $link->file_path) {
+            $size = Storage::size($link->file_path);
+            custom_user()?->decrement('storage_used', $size);
 
-            $fullPath = storage_path('app/public/'.$link->file_path);
-
-            if (file_exists($fullPath)) {
-                $fileSize = filesize($fullPath); // bytes
-
-                // 📉 Reduce user storage
-                $user = custom_user();
-                if ($user) {
-                    $user->decrement('storage_used', $fileSize);
-                }
-
-                // ❌ Remove physical file
-                // unlink($fullPath);
-            }
+            // Optional: actually delete file
+            // Storage::delete($link->file_path);
         }
 
         $link->delete();
@@ -187,36 +161,60 @@ class LinkController extends Controller
     public function redirect($code)
     {
         $link = Link::where('short_code', $code)->firstOrFail();
-
-        // 📈 Increment click count
         $link->increment('clicks');
 
-        // 📁 FILE → PREVIEW PAGE
+        // Store click record
+        Click::create([
+            'link_id' => $link->id,
+        ]);
+
         if ($link->type === 'file') {
-            return redirect()->route('file.preview', $code);
+            $extension = strtolower(pathinfo($link->file_path, PATHINFO_EXTENSION));
+
+            return response()->json([
+                'type' => in_array($extension, ['jpg', 'jpeg', 'png', 'webp']) ? 'image' : 'video',
+                'url' => Storage::url($link->file_path),
+                'views' => $link->clicks,
+                'downloads' => $link->downloads ?? 0,
+                'downloadUrl' => route('file.download', $code),
+            ]);
         }
 
-        // 🌐 URL → Redirect
-        return redirect()->away($link->original_url);
-    }
-
-    public function preview($code)
-    {
-        $link = Link::where('short_code', $code)->firstOrFail();
-
-        $extension = strtolower(pathinfo($link->file_path, PATHINFO_EXTENSION));
-        $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'webp']);
-        $isVideo = in_array($extension, ['mp4', 'mov', 'avi']);
-
-        return view('file.preview', compact('link', 'isImage', 'isVideo'));
+        return response()->json([
+            'redirect' => $link->original_url,
+        ]);
     }
 
     public function download($code)
     {
         $link = Link::where('short_code', $code)->firstOrFail();
-
         $link->increment('downloads');
 
-        return response()->download(storage_path('app/public/'.$link->file_path));
+        return Storage::download($link->file_path);
+    }
+
+    public function clickAnalytics()
+    {
+        $userId = custom_user()->id;
+
+        $labels = [];
+        $values = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->toDateString();
+
+            $labels[] = $date;
+
+            $values[] = Click::whereDate('created_at', $date)
+                ->whereHas('link', function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                })
+                ->count();
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'values' => $values,
+        ]);
     }
 }
