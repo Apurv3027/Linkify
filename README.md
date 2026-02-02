@@ -92,12 +92,12 @@ GET /analytics/clicks
 
 <!-- --- -->
 
-## 📊 Chart Implementation
+<!-- ## 📊 Chart Implementation
 
 - Chart.js (Line chart)
 - AJAX polling every 5 seconds
 - User-specific data
-- Auto-refresh without reload
+- Auto-refresh without reload -->
 
 <!-- --- -->
 
