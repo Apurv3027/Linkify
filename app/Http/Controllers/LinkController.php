@@ -7,6 +7,7 @@ use App\Models\Link;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Jenssegers\Agent\Agent;
 
 class LinkController extends Controller
 {
@@ -21,41 +22,128 @@ class LinkController extends Controller
 
         $userId = custom_user()->id;
 
-        $links = Link::where('user_id', $userId)->latest()->paginate(10);
+        // Selected period (default 7 days)
+        $period = request('period', '7');
+
+        // Base click query
+        $baseQuery = Click::whereHas('link', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
+
+        // Apply period filter
+        if ($period == '7') {
+            $baseQuery->where('created_at', '>=', now()->subDays(7));
+        } elseif ($period == '30') {
+            $baseQuery->where('created_at', '>=', now()->subDays(30));
+        }
+
+        // "all" means no date filter
+
+        //  Basic Stats
+
+        $links = Link::where('user_id', $userId)
+            ->latest()
+            ->paginate(10);
 
         $totalLinks = Link::where('user_id', $userId)->count();
-        $totalClicks = Link::where('user_id', $userId)->sum('clicks');
+
         $totalFiles = Link::where('user_id', $userId)
             ->where('type', 'file')
             ->count();
 
-        // Click chart (last 7 days)
+        $totalClicks = (clone $baseQuery)->count();
+
+        $uniqueVisitors = (clone $baseQuery)
+            ->distinct('ip_address')
+            ->count('ip_address');
+
+        // Click Trend Chart
         $labels = [];
         $values = [];
 
-        for ($i = 6; $i >= 0; $i--) {
-            // $date = now()->subDays($i)->format('Y-m-d');
-            $date = now()->subDays($i)->toDateString();
+        if ($period == '7' || $period == '30') {
 
-            $labels[] = $date;
-            // $values[] = Link::where('user_id', $userId)
-            //     ->whereDate('created_at', $date)
-            //     ->sum('clicks');
+            $days = ($period == '7') ? 6 : 29;
 
-            $values[] = Click::whereDate('created_at', $date)
-                ->whereHas('link', function ($q) use ($userId) {
-                    $q->where('user_id', $userId);
-                })
-                ->count();
+            for ($i = $days; $i >= 0; $i--) {
+
+                $date = now()->subDays($i)->toDateString();
+
+                $labels[] = $date;
+
+                $values[] = Click::whereDate('created_at', $date)
+                    ->whereHas('link', function ($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    })
+                    ->count();
+            }
+
+        } else {
+
+            $allClicks = Click::whereHas('link', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+
+            foreach ($allClicks as $click) {
+                $labels[] = $click->date;
+                $values[] = $click->total;
+            }
         }
+
+        // Country Stats
+        $countries = (clone $baseQuery)
+            ->whereNotNull('country')
+            ->selectRaw('country, COUNT(*) as total')
+            ->groupBy('country')
+            ->orderByDesc('total')
+            ->get();
+
+        // Referrer Stats
+        $referrers = (clone $baseQuery)
+            ->selectRaw("COALESCE(referrer,'Direct') as referrer, COUNT(*) as total")
+            ->groupBy('referrer')
+            ->orderByDesc('total')
+            ->get();
+
+        // Device Stats
+        $devices = (clone $baseQuery)
+            ->whereNotNull('device')
+            ->selectRaw('device, COUNT(*) as total')
+            ->groupBy('device')
+            ->orderByDesc('total')
+            ->get();
+
+        // Browser Stats
+        $browsers = (clone $baseQuery)
+            ->whereNotNull('browser')
+            ->selectRaw('browser, COUNT(*) as total')
+            ->groupBy('browser')
+            ->orderByDesc('total')
+            ->get();
+
+        // Top Values
+        $topCountry = $countries->first()->country ?? null;
+        $topDevice = $devices->first()->device ?? null;
 
         return view('dashboard', compact(
             'links',
             'totalLinks',
-            'totalClicks',
             'totalFiles',
+            'totalClicks',
+            'uniqueVisitors',
             'labels',
-            'values'
+            'values',
+            'countries',
+            'referrers',
+            'devices',
+            'browsers',
+            'topCountry',
+            'topDevice',
+            'period'
         ));
     }
 
@@ -163,26 +251,72 @@ class LinkController extends Controller
         $link = Link::where('short_code', $code)->firstOrFail();
         $link->increment('clicks');
 
-        // Store click record
-        Click::create([
-            'link_id' => $link->id,
-        ]);
+        try {
+
+            $agent = new Agent;
+
+            $ip = request()->ip();
+            if (in_array($ip, ['127.0.0.1', '::1'])) {
+                $ip = '8.8.8.8';
+            }
+
+            $country = 'Unknown';
+
+            $response = \Illuminate\Support\Facades\Http::timeout(2)
+                ->get("http://ip-api.com/json/{$ip}");
+
+            if ($response->ok() && $response['status'] === 'success') {
+                $country = $response['country'] ?? 'Unknown';
+            }
+
+            // Store click record
+            Click::create([
+                'link_id' => $link->id,
+                'ip_address' => $ip,
+                'referrer' => request()->headers->get('referer') ?? 'Direct',
+                'device' => $agent->device() ?? 'Unknown',
+                'browser' => $agent->browser() ?? 'Unknown',
+                'country' => $country,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Analytics Error: '.$e->getMessage());
+        }
 
         if ($link->type === 'file') {
             $extension = strtolower(pathinfo($link->file_path, PATHINFO_EXTENSION));
+            $fileUrl = Storage::url($link->file_path);
 
+            // If AJAX → return JSON for modal preview
+            if (request()->expectsJson()) {
+
+                return response()->json([
+                    'type' => in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])
+                                ? 'image'
+                                : 'video',
+                    'url' => $fileUrl,
+                    'views' => $link->clicks,
+                    'downloads' => $link->downloads ?? 0,
+                    'downloadUrl' => route('file.download', $code),
+                ]);
+            }
+
+            // If normal browser request → open media directly
+            return redirect($fileUrl);
+        }
+
+        // return response()->json([
+        //     'redirect' => $link->original_url,
+        // ]);
+
+        if (request()->expectsJson()) {
             return response()->json([
-                'type' => in_array($extension, ['jpg', 'jpeg', 'png', 'webp']) ? 'image' : 'video',
-                'url' => Storage::url($link->file_path),
-                'views' => $link->clicks,
-                'downloads' => $link->downloads ?? 0,
-                'downloadUrl' => route('file.download', $code),
+                'redirect' => $link->original_url,
             ]);
         }
 
-        return response()->json([
-            'redirect' => $link->original_url,
-        ]);
+        return redirect()->away($link->original_url);
+
     }
 
     public function download($code)
@@ -193,14 +327,28 @@ class LinkController extends Controller
         return Storage::download($link->file_path);
     }
 
-    public function clickAnalytics()
+    public function analyticsData(Request $request)
     {
         $userId = custom_user()->id;
+        $period = $request->period ?? '7';
 
+        $baseQuery = Click::whereHas('link', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
+
+        if ($period == '7') {
+            $baseQuery->where('created_at', '>=', now()->subDays(7));
+        } elseif ($period == '30') {
+            $baseQuery->where('created_at', '>=', now()->subDays(30));
+        }
+
+        // Trend data
         $labels = [];
         $values = [];
 
-        for ($i = 6; $i >= 0; $i--) {
+        $days = ($period == '30') ? 29 : 6;
+
+        for ($i = $days; $i >= 0; $i--) {
             $date = now()->subDays($i)->toDateString();
 
             $labels[] = $date;
@@ -212,9 +360,29 @@ class LinkController extends Controller
                 ->count();
         }
 
+        $countries = (clone $baseQuery)
+            ->selectRaw('country, COUNT(*) as total')
+            ->groupBy('country')
+            ->get();
+
+        $devices = (clone $baseQuery)
+            ->selectRaw('device, COUNT(*) as total')
+            ->groupBy('device')
+            ->get();
+
+        $referrers = (clone $baseQuery)
+            ->selectRaw("COALESCE(referrer,'Direct') as referrer, COUNT(*) as total")
+            ->groupBy('referrer')
+            ->get();
+
         return response()->json([
             'labels' => $labels,
             'values' => $values,
+            'totalClicks' => $baseQuery->count(),
+            'uniqueVisitors' => $baseQuery->distinct('ip_address')->count('ip_address'),
+            'countries' => $countries,
+            'devices' => $devices,
+            'referrers' => $referrers,
         ]);
     }
 }

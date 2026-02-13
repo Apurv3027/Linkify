@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('clicks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('link_id')->constrained()->cascadeOnDelete();
+            $table->string('ip_address')->nullable();
+            $table->string('country')->nullable();
+            $table->string('referrer')->nullable();
+            $table->string('device')->nullable();
+            $table->string('browser')->nullable();
             $table->timestamps();
         });
     }

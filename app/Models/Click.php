@@ -8,6 +8,11 @@ class Click extends Model
 {
     protected $fillable = [
         'link_id',
+        'ip_address',
+        'country',
+        'referrer',
+        'device',
+        'browser',
     ];
 
     public function link()
