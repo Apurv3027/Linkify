@@ -160,14 +160,14 @@ class LinkController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'original_url' => 'nullable|url',
-            'file' => 'nullable|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200',
-        ]);
+       $request->validate([
+        'original_url' => 'nullable|url',
+        'file' => 'nullable|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200',
+    ]);
 
-        if (! $request->filled('original_url') && ! $request->hasFile('file')) {
-            return back()->withErrors('Provide a URL or upload a file');
-        }
+       if (! $request->filled('original_url') && ! $request->hasFile('file')) {
+        return back()->withErrors('Provide a URL or upload a file');
+    }
 
         if ($request->hasFile('file') && ! custom_user()) {
             return redirect('/login')->withErrors('Login required');

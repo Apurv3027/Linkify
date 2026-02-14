@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Login | Linkify</title>
@@ -29,10 +30,28 @@
             font-weight: 800;
             color: #4f46e5;
         }
-
     </style>
 </head>
+
 <body>
+
+    @if(session('success'))
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0 shadow" role="alert"
+            aria-live="assertive" aria-atomic="true">
+
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ session('success') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close">
+                </button>
+            </div>
+
+        </div>
+    </div>
+    @endif
 
     <div class="container">
         <div class="row justify-content-center">
@@ -81,4 +100,28 @@
     </div>
 
 </body>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toastEl = document.getElementById('successToast');
+
+        if (toastEl) {
+            const toast = new bootstrap.Toast(toastEl, {
+                delay: 4000,
+                autohide: true
+            });
+
+            toast.show();
+
+            // Remove from DOM after hidden
+            toastEl.addEventListener('hidden.bs.toast', function () {
+                toastEl.remove();
+            });
+        }
+    });
+</script>
+
+
 </html>

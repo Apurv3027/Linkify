@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LinkController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PageController;
 
 /*
     Public Routes
@@ -35,3 +36,11 @@ Route::get('/analytics/data', [LinkController::class, 'analyticsData'])
 */
 // Route::get('/{code}', [LinkController::class, 'redirect']);
 Route::get('/{code}', [LinkController::class, 'redirect'])->where('code', '[A-Za-z0-9]{6}');
+
+/*
+    Static Pages
+*/
+Route::get('/privacy', [PageController::class, 'privacy'])->name('privacy');
+Route::get('/terms', [PageController::class, 'terms'])->name('terms');
+Route::get('/support', [PageController::class, 'support'])->name('support');
+Route::get('/error404', [PageController::class, 'error404'])->name('error404');
