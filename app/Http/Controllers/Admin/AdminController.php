@@ -49,7 +49,7 @@ class AdminController extends Controller
         $users = $query->latest()->paginate(10);
 
         if ($request->ajax()) {
-            return view('admin.partials.user_table', compact('users'))->render();
+            return view('admin.components.user_table', compact('users'))->render();
         }
 
         return view('admin.users', compact('users'));
