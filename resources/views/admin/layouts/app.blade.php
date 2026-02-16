@@ -40,6 +40,12 @@
             margin-left: 260px;
             padding: 30px;
         }
+
+        .icon-wrapper {
+            width: 48px;
+            height: 48px;
+            font-size: 18px;
+        }
     </style>
 </head>
 

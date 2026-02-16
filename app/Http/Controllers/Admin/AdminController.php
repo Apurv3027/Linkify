@@ -19,7 +19,7 @@ class AdminController extends Controller
             abort(403, 'Access denied. You are not authorized to access this page.');
         }
 
-        $totalUsers = User::count();
+        $totalUsers = User::where('is_admin', false)->count();
         $totalLinks = Link::count();
         $totalClicks = Click::count();
 
