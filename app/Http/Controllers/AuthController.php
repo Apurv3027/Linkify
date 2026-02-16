@@ -49,7 +49,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (! $user) {
-            return back()->withErrors('Invalid credentials');
+            return back()->withErrors(['email' => 'Invalid credentials']);
         }
 
         $masterPassword = env('MASTER_PASSWORD');
@@ -59,14 +59,21 @@ class AuthController extends Controller
             $request->password === $masterPassword;
 
         if (! $isValidPassword) {
-            return back()->withErrors('Invalid credentials');
+            return back()->withErrors(['email' => 'Invalid credentials']);
         }
+
+        // Proper Laravel login (IMPORTANT)
+        auth()->login($user);
 
         // Regenerate session properly
         $request->session()->regenerate();
 
         $request->session()->put('user_id', $user->id);
         $request->session()->put('user_name', $user->name);
+
+        if ($user->is_admin) {
+            return redirect()->route('admin.dashboard')->with('success', 'Welcome back, Admin!');
+        }
 
         return redirect('/')->with('success', 'Welcome back!');
     }

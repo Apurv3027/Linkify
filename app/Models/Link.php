@@ -24,6 +24,17 @@ class Link extends Model
         'clicks' => 'integer',
     ];
 
+    /**
+     * Link belongs to a User
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Link has many Clicks
+     */
     public function clicks()
     {
         return $this->hasMany(Click::class);
