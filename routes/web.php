@@ -18,7 +18,7 @@ Route::post('/shorten', [LinkController::class, 'store']);
 Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/register', [AuthController::class, 'register']);
 
-Route::get('/login', [AuthController::class, 'showLogin']);
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/logout', [AuthController::class, 'logout']);
@@ -59,6 +59,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/links', [AdminController::class, 'links'])->name('admin.links');
 
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
+    Route::get('/analytics-data', [AdminController::class, 'analyticsData'])->name('admin.analytics.data');
 
     Route::get('/reports', [AdminController::class, 'reports'])->name('admin.reports');
 

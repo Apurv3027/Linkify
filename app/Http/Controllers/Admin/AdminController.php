@@ -62,14 +62,85 @@ class AdminController extends Controller
         return view('admin.links', compact('links'));
     }
 
+    public function analyticsData(Request $request)
+    {
+        $days = (int) ($request->days ?? 7);
+
+        $startDate = now()->subDays($days)->startOfDay();
+        $previousStartDate = now()->subDays($days * 2)->startOfDay();
+        $previousEndDate = now()->subDays($days)->endOfDay();
+
+        // Current period totals
+        $totalClicks = Click::where('created_at', '>=', $startDate)->count();
+        $totalUsers = User::where('created_at', '>=', $startDate)->count();
+
+        // Previous period totals
+        $previousClicks = Click::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count();
+        $previousUsers = User::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count();
+
+        // Calculate percentage growth safely
+        $clickGrowth = $previousClicks > 0
+            ? (($totalClicks - $previousClicks) / $previousClicks) * 100
+            : 100;
+
+        $userGrowth = $previousUsers > 0
+            ? (($totalUsers - $previousUsers) / $previousUsers) * 100
+            : 100;
+
+        // Grouped daily data
+        $clicksData = Click::where('created_at', '>=', $startDate)
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
+        $usersData = User::where('created_at', '>=', $startDate)
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
+        $labels = [];
+        $clicks = [];
+        $users = [];
+
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+
+            $labels[] = $date;
+            $clicks[] = $clicksData[$date] ?? 0;
+            $users[] = $usersData[$date] ?? 0;
+        }
+
+        $topLinks = Link::orderByDesc('clicks')
+            ->take(5)
+            ->get(['short_code', 'clicks']);
+
+        $countries = Click::where('created_at', '>=', $startDate)
+            ->selectRaw("COALESCE(country,'Unknown') as country, COUNT(*) as total")
+            ->groupBy('country')
+            ->orderByDesc('total')
+            ->pluck('total', 'country');
+
+        return response()->json([
+            'labels' => $labels,
+            'clicks' => $clicks,
+            'users' => $users,
+            'countries' => $countries->keys(),
+            'countryClicks' => $countries->values(),
+            'topLinks' => $topLinks,
+            'totals' => [
+                'clicks' => $totalClicks,
+                'users' => $totalUsers,
+                'clickGrowth' => round($clickGrowth, 1),
+                'userGrowth' => round($userGrowth, 1),
+            ],
+        ]);
+    }
+
     public function analytics()
     {
-        $clicks = Click::selectRaw('DATE(created_at) as date, count(*) as total')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        $topLinks = Link::orderByDesc('clicks')->take(5)->get();
 
-        return view('admin.analytics', compact('clicks'));
+        return view('admin.analytics', compact('topLinks'));
     }
 
     public function reports()
