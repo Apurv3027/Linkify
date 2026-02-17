@@ -120,6 +120,10 @@ class AdminController extends Controller
             ->orderByDesc('total')
             ->pluck('total', 'country');
 
+        $recentClicks = Click::latest()
+            ->take(10)
+            ->get(['ip_address', 'country', 'created_at']);
+
         return response()->json([
             'labels' => $labels,
             'clicks' => $clicks,
@@ -127,6 +131,7 @@ class AdminController extends Controller
             'countries' => $countries->keys(),
             'countryClicks' => $countries->values(),
             'topLinks' => $topLinks,
+            'recentClicks' => $recentClicks,
             'totals' => [
                 'clicks' => $totalClicks,
                 'users' => $totalUsers,

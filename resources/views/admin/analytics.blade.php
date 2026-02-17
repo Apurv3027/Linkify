@@ -121,6 +121,31 @@
 
 </div>
 
+{{-- Recent Activity --}}
+<div class="card border-0 shadow-sm bg-body rounded-3 mt-4">
+    <div class="card-header bg-body-tertiary border-0 px-4 py-3">
+        <h6 class="fw-semibold mb-0">Recent Click Activity</h6>
+    </div>
+    <div class="card-body p-0 table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="px-4">IP Address</th>
+                    <th>Country</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="recentActivity">
+                <tr>
+                    <td colspan="3" class="text-center py-4 text-muted">
+                        Loading recent activity...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -252,6 +277,7 @@
             .then(data => {
                 initCharts(data);
                 updateTopLinks(data.topLinks);
+                updateRecentActivity(data.recentClicks);
                 showLoader(false);
             });
     }
@@ -267,6 +293,40 @@
             `;
         });
         document.getElementById('topLinksTable').innerHTML = html;
+    }
+
+    function updateRecentActivity(clicks){
+
+        let html = '';
+
+        if(clicks.length === 0){
+            html = `
+                <tr>
+                    <td colspan="3" class="text-center py-4 text-muted">
+                        No recent activity
+                    </td>
+                </tr>
+            `;
+        }else{
+
+            clicks.forEach(item => {
+
+                let date = new Date(item.created_at);
+
+                html += `
+                    <tr>
+                        <td class="px-4">${item.ip_address ?? '-'}</td>
+                        <td>${item.country ?? 'Unknown'}</td>
+                        <td>
+                            ${date.toLocaleDateString()}
+                            ${date.toLocaleTimeString()}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('recentActivity').innerHTML = html;
     }
 
     document.getElementById('dateRange').addEventListener('change', function(){

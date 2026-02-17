@@ -61,8 +61,6 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
     Route::get('/analytics-data', [AdminController::class, 'analyticsData'])->name('admin.analytics.data');
 
-    Route::get('/reports', [AdminController::class, 'reports'])->name('admin.reports');
-
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');

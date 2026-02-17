@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -58,7 +59,6 @@
         <a href="{{ route('admin.users') }}"><i class="fa fa-users me-2"></i> Users</a>
         <a href="{{ route('admin.links') }}"><i class="fa fa-link me-2"></i> All Links</a>
         <a href="{{ route('admin.analytics') }}"><i class="fa fa-chart-bar me-2"></i> Analytics</a>
-        <a href="{{ route('admin.reports') }}"><i class="fa fa-file me-2"></i> Reports</a>
         <a href="{{ route('admin.settings') }}"><i class="fa fa-cog me-2"></i> Settings</a>
 
         <button class="btn btn-danger w-100 mt-4" data-bs-toggle="modal" data-bs-target="#logoutModal">
