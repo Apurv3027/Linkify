@@ -8,12 +8,14 @@
 {{-- Page Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <div>
-        <h4 class="fw-semibold mb-1">Performance Analytics</h4>
-        <small class="text-secondary">Monitor traffic, growth & engagement insights</small>
+        <h4 class="fw-semibold mb-1 text-body">Performance Analytics</h4>
+        <small class="text-body-secondary">
+            Monitor traffic, growth & engagement insights
+        </small>
     </div>
 
     <div class="d-flex align-items-center gap-2">
-        <select id="dateRange" class="form-select form-select-sm">
+        <select id="dateRange" class="form-select form-select-sm bg-body text-body border">
             <option value="7" selected>Last 7 Days</option>
             <option value="15">Last 15 Days</option>
             <option value="30">Last 30 Days</option>
@@ -21,18 +23,17 @@
     </div>
 </div>
 
-
 {{-- KPI SECTION --}}
 <div class="row g-4 mb-4">
 
     <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm bg-body rounded-3 h-100">
+        <div class="card border rounded-4 shadow-sm bg-body h-100">
             <div class="card-body">
-                <div class="text-secondary small text-uppercase mb-2">
+                <div class="text-uppercase small text-body-secondary mb-2">
                     Total Clicks
                 </div>
-                <h3 id="kpiClicks" class="fw-bold mb-1">0</h3>
-                <span id="kpiClicksGrowth" class="badge bg-success-subtle text-success small">
+                <h3 id="kpiClicks" class="fw-bold mb-1 text-body">0</h3>
+                <span id="kpiClicksGrowth" class="badge rounded-pill small">
                     +0%
                 </span>
             </div>
@@ -40,13 +41,13 @@
     </div>
 
     <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm bg-body rounded-3 h-100">
+        <div class="card border rounded-4 shadow-sm bg-body h-100">
             <div class="card-body">
-                <div class="text-secondary small text-uppercase mb-2">
+                <div class="text-uppercase small text-body-secondary mb-2">
                     Total Users
                 </div>
-                <h3 id="kpiUsers" class="fw-bold mb-1">0</h3>
-                <span id="kpiUsersGrowth" class="badge bg-success-subtle text-success small">
+                <h3 id="kpiUsers" class="fw-bold mb-1 text-body">0</h3>
+                <span id="kpiUsersGrowth" class="badge rounded-pill small">
                     +0%
                 </span>
             </div>
@@ -57,10 +58,12 @@
 
 
 {{-- Main Chart --}}
-<div class="card border-0 shadow-sm bg-body mb-4 rounded-3">
-    <div class="card-header bg-body-tertiary border-0 px-4 py-3 d-flex justify-content-between align-items-center">
-        <h6 class="fw-semibold mb-0">Clicks vs Users Trend</h6>
-        <div class="text-secondary small">Live Updates</div>
+<div class="card border rounded-4 shadow-sm bg-body mb-4">
+    <div class="card-header bg-body-tertiary border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-semibold mb-0 text-body">
+            Clicks vs Users Trend
+        </h6>
+        <small class="text-body-secondary">Live Updates</small>
     </div>
     <div class="card-body p-4 position-relative">
         <div id="chartLoader" class="text-center py-5 d-none">
@@ -80,8 +83,8 @@
                 <h6 class="fw-semibold mb-0">Top Performing Links</h6>
             </div>
             <div class="card-body p-0 table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead class="table-light">
+                <table class="table align-middle mb-0 table-hover">
+                    <thead class="bg-body-tertiary">
                         <tr>
                             <th>Short Code</th>
                             <th class="text-end">Clicks</th>
@@ -127,8 +130,8 @@
         <h6 class="fw-semibold mb-0">Recent Click Activity</h6>
     </div>
     <div class="card-body p-0 table-responsive">
-        <table class="table align-middle mb-0">
-            <thead class="table-light">
+        <table class="table align-middle mb-0 table-hover">
+            <thead class="bg-body-tertiary">
                 <tr>
                     <th class="px-4">IP Address</th>
                     <th>Country</th>
@@ -137,7 +140,7 @@
             </thead>
             <tbody id="recentActivity">
                 <tr>
-                    <td colspan="3" class="text-center py-4 text-muted">
+                    <td colspan="3" class="text-center py-4 text-body-secondary">
                         Loading recent activity...
                     </td>
                 </tr>
@@ -220,13 +223,28 @@
                 datasets: [{
                     label: 'Clicks',
                     data: data.countryClicks,
+                    backgroundColor: isDark ? '#4dabf7' : '#0d6efd',
                     borderRadius: 6
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { display: false }
+                    legend: {
+                        labels: {
+                            color: isDark ? '#f8f9fa' : '#212529'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: isDark ? '#adb5bd' : '#495057' },
+                        grid: { display:false }
+                    },
+                    y: {
+                        ticks: { color: isDark ? '#adb5bd' : '#495057' },
+                        grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }
+                    }
                 }
             }
         });
@@ -302,7 +320,7 @@
         if(clicks.length === 0){
             html = `
                 <tr>
-                    <td colspan="3" class="text-center py-4 text-muted">
+                    <td colspan="3" class="text-center py-4 text-body-secondary">
                         No recent activity
                     </td>
                 </tr>
