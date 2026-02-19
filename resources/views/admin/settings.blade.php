@@ -1,117 +1,138 @@
 @extends('admin.layouts.app')
 
-@section('title','Platform Settings')
-@section('page-title','System Configuration')
+@section('title','Account Settings')
+@section('page-title','Account Settings')
 
 @section('content')
 
-<div class="container-fluid px-0">
-
+<div class="container-fluid">
     <div class="row g-4">
 
-        {{-- App Identity Card --}}
-        <div class="col-xl-6">
+        {{-- LEFT SIDE : Personal Info --}}
+        <div class="col-lg-5">
 
             <div class="card border-0 shadow-sm rounded-4 bg-body h-100">
+
+                <div class="card-header bg-body border-bottom py-3 d-flex align-items-center">
+                    <i class="fa fa-user text-primary me-2"></i>
+                    <h6 class="fw-semibold mb-0 text-body">
+                        Personal Information
+                    </h6>
+                </div>
+
                 <div class="card-body p-4">
 
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="icon-box bg-primary-subtle text-primary rounded-3 me-3">
-                            <i class="fa fa-globe fs-5"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-semibold mb-0 text-body">Application Identity</h6>
-                            <small class="text-body-secondary">
-                                General platform configuration
-                            </small>
+                    <div class="mb-4">
+                        <label class="form-label text-body-secondary fw-medium">
+                            Full Name
+                        </label>
+                        <div class="form-control bg-body text-body border rounded-3">
+                            {{ $user->name }}
                         </div>
                     </div>
 
-                    <ul class="list-group list-group-flush">
-
-                        <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between">
-                            <span class="text-body fw-medium">Application Name</span>
-                            <span class="text-body-secondary">
-                                {{ config('app.name') }}
-                            </span>
-                        </li>
-
-                        <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between">
-                            <span class="text-body fw-medium">Application URL</span>
-                            <span class="text-body-secondary small">
-                                {{ config('app.url') }}
-                            </span>
-                        </li>
-
-                        <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between">
-                            <span class="text-body fw-medium">Locale</span>
-                            <span class="badge bg-info-subtle text-info">
-                                {{ strtoupper(config('app.locale')) }}
-                            </span>
-                        </li>
-
-                    </ul>
+                    <div>
+                        <label class="form-label text-body-secondary fw-medium">
+                            Email Address
+                        </label>
+                        <div class="form-control bg-body text-body border rounded-3">
+                            {{ $user->email }}
+                        </div>
+                    </div>
 
                 </div>
+
             </div>
 
         </div>
 
-        {{-- Environment Card --}}
-        <div class="col-xl-6">
+        {{-- RIGHT SIDE : Change Password --}}
+        <div class="col-lg-7">
 
-            <div class="card border-0 shadow-sm rounded-4 bg-body h-100">
+            {{-- Alerts --}}
+            @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
+
+            @if($errors->any())
+            <div class="alert alert-danger shadow-sm rounded-3">
+                <ul class="mb-0 ps-3 small">
+                    @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            <div class="card border-0 shadow-sm rounded-4 bg-body">
+
+                <div class="card-header bg-body border-bottom py-3 d-flex align-items-center">
+                    <i class="fa fa-lock text-danger me-2"></i>
+                    <h6 class="fw-semibold mb-0 text-body">
+                        Change Password
+                    </h6>
+                </div>
+
                 <div class="card-body p-4">
 
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="icon-box bg-success-subtle text-success rounded-3 me-3">
-                            <i class="fa fa-server fs-5"></i>
+                    <form method="POST" action="{{ route('admin.password.update') }}">
+                        @csrf
+
+                        {{-- Current Password --}}
+                        <div class="mb-4">
+                            <label class="form-label text-body-secondary fw-medium">
+                                Current Password
+                            </label>
+                            <div class="input-group">
+                                <input type="password" name="current_password" id="current_password"
+                                    class="form-control bg-body text-body border rounded-start-3" placeholder="Enter current password" required>
+                                <span class="input-group-text bg-body border rounded-end-3 toggle-password"
+                                    data-target="current_password" style="cursor:pointer;">
+                                    <i class="fa fa-eye"></i>
+                                </span>
+                            </div>
                         </div>
-                        <div>
-                            <h6 class="fw-semibold mb-0 text-body">Environment Status</h6>
-                            <small class="text-body-secondary">
-                                System runtime information
-                            </small>
+
+                        {{-- New Password --}}
+                        <div class="mb-4">
+                            <label class="form-label text-body-secondary fw-medium">
+                                New Password
+                            </label>
+                            <div class="input-group">
+                                <input type="password" name="password" id="password"
+                                    class="form-control bg-body text-body border rounded-start-3" placeholder="Enter new password" required>
+                                <span class="input-group-text bg-body border rounded-end-3 toggle-password"
+                                    data-target="password">
+                                    <i class="fa fa-eye"></i>
+                                </span>
+                            </div>
                         </div>
-                    </div>
 
-                    <ul class="list-group list-group-flush">
+                        {{-- Confirm Password --}}
+                        <div class="mb-4">
+                            <label class="form-label text-body-secondary fw-medium">
+                                Confirm Password
+                            </label>
+                            <div class="input-group">
+                                <input type="password" name="password_confirmation" id="password_confirmation"
+                                    class="form-control bg-body text-body border rounded-start-3" placeholder="Enter confirm password" required>
+                                <span class="input-group-text bg-body border rounded-end-3 toggle-password"
+                                    data-target="password_confirmation">
+                                    <i class="fa fa-eye"></i>
+                                </span>
+                            </div>
+                        </div>
 
-                        <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between">
-                            <span class="text-body fw-medium">Environment</span>
-                            <span class="badge
-                                {{ config('app.env') === 'production'
-                                    ? 'bg-success-subtle text-success'
-                                    : 'bg-warning-subtle text-warning' }}">
-                                {{ ucfirst(config('app.env')) }}
-                            </span>
-                        </li>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                                Update Password
+                            </button>
+                        </div>
 
-                        <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between">
-                            <span class="text-body fw-medium">Debug Mode</span>
-                            <span class="badge
-                                {{ config('app.debug')
-                                    ? 'bg-danger-subtle text-danger'
-                                    : 'bg-success-subtle text-success' }}">
-                                {{ config('app.debug') ? 'Enabled' : 'Disabled' }}
-                            </span>
-                        </li>
-
-                        <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between">
-                            <span class="text-body fw-medium">Laravel Version</span>
-                            <span class="text-body-secondary">
-                                {{ app()->version() }}
-                            </span>
-                        </li>
-
-                        <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between">
-                            <span class="text-body fw-medium">PHP Version</span>
-                            <span class="text-body-secondary">
-                                {{ PHP_VERSION }}
-                            </span>
-                        </li>
-
-                    </ul>
+                    </form>
 
                 </div>
             </div>
@@ -119,27 +140,25 @@
         </div>
 
     </div>
-
-    {{-- Footer Card --}}
-    <div class="card border-0 shadow-sm rounded-4 bg-body mt-4">
-        <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-
-            <div>
-                <h6 class="fw-semibold mb-1 text-body">Configuration Management</h6>
-                <small class="text-body-secondary">
-                    Core settings are managed via environment variables (.env file).
-                </small>
-            </div>
-
-            <div class="text-end">
-                <code class="text-body-secondary small">
-                    php artisan optimize:clear
-                </code>
-            </div>
-
-        </div>
-    </div>
-
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    document.querySelectorAll('.toggle-password').forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+            let input = document.getElementById(this.dataset.target);
+            let icon = this.querySelector('i');
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+    });
+</script>
+@endpush

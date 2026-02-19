@@ -62,6 +62,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/analytics-data', [AdminController::class, 'analyticsData'])->name('admin.analytics.data');
 
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
+    Route::post('/password/update', [AdminController::class, 'updatePassword'])->name('admin.password.update');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
 });

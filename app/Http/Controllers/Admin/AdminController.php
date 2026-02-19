@@ -7,6 +7,8 @@ use App\Models\Click;
 use App\Models\Link;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
@@ -156,13 +158,29 @@ class AdminController extends Controller
     public function settings()
     {
         return view('admin.settings', [
-            'appName' => config('app.name'),
-            'appUrl' => config('app.url'),
-            'appEnv' => config('app.env'),
-            'appDebug' => config('app.debug'),
-            'appLocale' => config('app.locale'),
-            'phpVersion' => PHP_VERSION,
-            'laravelVersion' => app()->version(),
+            'user' => auth()->user(),
         ]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        $user = auth()->user();
+
+        if (! Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors([
+                'current_password' => 'Current password is incorrect.',
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return back()->with('success', 'Password updated successfully.');
     }
 }
