@@ -155,6 +155,14 @@ class AdminController extends Controller
 
     public function settings()
     {
-        return view('admin.settings');
+        return view('admin.settings', [
+            'appName' => config('app.name'),
+            'appUrl' => config('app.url'),
+            'appEnv' => config('app.env'),
+            'appDebug' => config('app.debug'),
+            'appLocale' => config('app.locale'),
+            'phpVersion' => PHP_VERSION,
+            'laravelVersion' => app()->version(),
+        ]);
     }
 }
