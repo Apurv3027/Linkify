@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Link;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
@@ -70,16 +70,17 @@ class AuthController extends Controller
         // Regenerate session properly
         $request->session()->regenerate();
 
-        // Auto Transfer Guest Links
-        $this->transferGuestLinks($user, $request);
-
         // Session Info
         $request->session()->put('user_id', $user->id);
         $request->session()->put('user_name', $user->name);
 
+        // If admin then do not transfer guest links
         if ($user->is_admin) {
             return redirect()->route('admin.dashboard')->with('success', 'Welcome back, Admin!');
         }
+
+        // Auto Transfer Guest Links
+        $this->transferGuestLinks($user, $request);
 
         return redirect('/')->with('success', 'Welcome back!');
     }
