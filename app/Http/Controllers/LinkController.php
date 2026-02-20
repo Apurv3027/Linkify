@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
-use Illuminate\Support\Facades\Cookie;
 
 class LinkController extends Controller
 {
@@ -208,8 +207,16 @@ class LinkController extends Controller
 
         $user = custom_user();
 
-        // Limit guest users to 2 links per IP
         if (! $user && $this->guestLimitReached()) {
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Free limit reached (2/2). Please login for unlimited access.',
+                    'limit' => '2/2',
+                ], 403);
+            }
+
             return back()->withErrors(
                 'Free limit reached (2/2). Please login for unlimited access.'
             );
@@ -220,6 +227,7 @@ class LinkController extends Controller
         $link = new Link;
         $link->short_code = $code;
         $link->clicks = 0;
+        $link->ip_address = $request->ip();
 
         if ($user) {
             $link->user_id = $user->id;
@@ -229,12 +237,13 @@ class LinkController extends Controller
 
         if ($request->hasFile('file')) {
 
-            $path = $request->file('file')->store('uploads', 'public');
+            $file = $request->file('file');
+            $path = $file->store('uploads', 'public');
 
             $link->file_path = $path;
             $link->type = 'file';
 
-            $user?->increment('storage_used', $request->file('file')->getSize());
+            $user?->increment('storage_used', $file->getSize());
 
         } else {
 
@@ -243,6 +252,13 @@ class LinkController extends Controller
         }
 
         $link->save();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'shortUrl' => url($code),
+            ]);
+        }
 
         return back()->with('shortUrl', url($code));
     }
