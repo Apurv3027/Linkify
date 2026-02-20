@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
+use Illuminate\Support\Facades\Cookie;
 
 class LinkController extends Controller
 {
@@ -155,46 +156,93 @@ class LinkController extends Controller
         //
     }
 
+    private function generateUniqueCode(): string
+    {
+        do {
+            $code = Str::random(6);
+        } while (Link::where('short_code', $code)->exists());
+
+        return $code;
+    }
+
+    private function getGuestToken(): string
+    {
+        if (! request()->cookie('guest_token')) {
+
+            $token = Str::uuid()->toString();
+
+            cookie()->queue(cookie(
+                'guest_token',
+                $token,
+                60 * 24 * 30 // 30 days
+            ));
+
+            return $token;
+        }
+
+        return request()->cookie('guest_token');
+    }
+
+    private function guestLimitReached(): bool
+    {
+        $token = $this->getGuestToken();
+
+        return Link::whereNull('user_id')
+            ->where('guest_token', $token)
+            ->count() >= 2;
+    }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-       $request->validate([
-        'original_url' => 'nullable|url',
-        'file' => 'nullable|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200',
-    ]);
+        $request->validate([
+            'original_url' => 'nullable|url',
+            'file' => 'nullable|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200',
+        ]);
 
-       if (! $request->filled('original_url') && ! $request->hasFile('file')) {
-        return back()->withErrors('Provide a URL or upload a file');
-    }
-
-        if ($request->hasFile('file') && ! custom_user()) {
-            return redirect('/login')->withErrors('Login required');
+        if (! $request->filled('original_url') && ! $request->hasFile('file')) {
+            return back()->withErrors('Provide a URL or upload a file');
         }
 
-        $code = Str::random(6);
+        $user = custom_user();
 
-        $data = [
-            'user_id' => custom_user()?->id,
-            'short_code' => $code,
-            'clicks' => 0,
-        ];
+        // Limit guest users to 2 links per IP
+        if (! $user && $this->guestLimitReached()) {
+            return back()->withErrors(
+                'Free limit reached (2/2). Please login for unlimited access.'
+            );
+        }
+
+        $code = $this->generateUniqueCode();
+
+        $link = new Link;
+        $link->short_code = $code;
+        $link->clicks = 0;
+
+        if ($user) {
+            $link->user_id = $user->id;
+        } else {
+            $link->guest_token = $this->getGuestToken();
+        }
 
         if ($request->hasFile('file')) {
+
             $path = $request->file('file')->store('uploads', 'public');
 
-            $data['file_path'] = $path;
-            $data['type'] = 'file';
+            $link->file_path = $path;
+            $link->type = 'file';
 
-            // Track storage usage
-            custom_user()?->increment('storage_used', $request->file('file')->getSize());
+            $user?->increment('storage_used', $request->file('file')->getSize());
+
         } else {
-            $data['original_url'] = $request->original_url;
-            $data['type'] = 'url';
+
+            $link->original_url = $request->original_url;
+            $link->type = 'url';
         }
 
-        Link::create($data);
+        $link->save();
 
         return back()->with('shortUrl', url($code));
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -68,6 +69,10 @@ class AuthController extends Controller
         // Regenerate session properly
         $request->session()->regenerate();
 
+        // Auto Transfer Guest Links
+        $this->transferGuestLinks($user, $request);
+
+        // Session Info
         $request->session()->put('user_id', $user->id);
         $request->session()->put('user_name', $user->name);
 
@@ -76,6 +81,24 @@ class AuthController extends Controller
         }
 
         return redirect('/')->with('success', 'Welcome back!');
+    }
+
+    private function transferGuestLinks(User $user, Request $request)
+    {
+        $guestToken = $request->cookie('guest_token');
+
+        if (! $guestToken) {
+            return;
+        }
+
+        Link::whereNull('user_id')
+            ->where('guest_token', $guestToken)
+            ->update([
+                'user_id' => $user->id,
+                'guest_token' => null,
+            ]);
+
+        Cookie::queue(Cookie::forget('guest_token'));
     }
 
     // public function logout()

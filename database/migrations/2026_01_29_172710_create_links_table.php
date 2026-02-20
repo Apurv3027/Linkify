@@ -17,6 +17,8 @@ return new class extends Migration
                 ->nullable()
                 ->constrained()
                 ->onDelete('cascade');
+            $table->string('ip_address')->nullable();
+            $table->string('guest_token')->nullable()->index();
             $table->string('original_url')->nullable();
             $table->string('file_path')->nullable();
             $table->string('type')->default('url');
