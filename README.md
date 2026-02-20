@@ -1,67 +1,87 @@
-# 🔗 Linkify — URL & File Shortener with Analytics (Laravel)
+# 🔗 Linkify — Modern URL & File Shortener with Live Analytics
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-success)](https://linkify-master-nsmfrc.laravel.cloud/)
+[![Laravel](https://img.shields.io/badge/Laravel-12-red)](https://laravel.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
 
-**Linkify** is a modern **URL & File Shortening** application built with **Laravel**, featuring **click analytics**, **file previews**, **download tracking**, and a **live-updating dashboard** using Chart.js.
+Linkify is a modern **URL & File Shortening SaaS application** built with **Laravel**.  
+It includes **click tracking, file previews, download analytics, and a live dashboard powered by Chart.js**.
+
+Designed with clean architecture, optimized performance, and production-ready structure.
 
 <!-- --- -->
 
 ## 🌐 Live Demo
 
-Try the application live without any setup:
+Experience the app instantly:
 
-🔗 **Linkify Demo**  
+🔗 **Live Application**  
 👉 https://linkify-master-nsmfrc.laravel.cloud/
 
-### What you can test
-- Shorten long URLs  
-- Upload images or videos and get shareable links  
-- Track click counts in real time  
-- Experience the responsive, modern UI
+### What You Can Test
+
+- 🔗 Shorten long URLs
+- 📁 Upload files and generate shareable links
+- 📊 Track click & download analytics
+- ⚡ Watch live-updating charts (no reload)
+- 📱 Explore modern SaaS-style UI
 
 <!-- --- -->
 
-## 🚀 Features
+# 🚀 Core Features
 
-### 🔗 Short Links
-- Shorten long URLs into clean short links
-- Redirect safely using Laravel `redirect()->away()`
-- Track total clicks automatically
+## 🔗 URL Shortening
+- Convert long URLs into clean, short links
+- Secure redirection using `redirect()->away()`
+- Automatic click tracking
+- Unique short code generation
 
-### 📁 File Shortener
+<!-- --- -->
+
+## 📁 File Shortening & Sharing
 - Upload files and generate shareable short links
-- **Preview files without opening a new page**
-  - 🖼 Images (jpg, png, webp)
-  - 🎥 Videos (mp4, mov, avi)
-- Secure file downloads with download counter
+- Supported formats:
+  - 🖼 Images: jpg, jpeg, png, webp
+  - 🎥 Videos: mp4, mov, avi
+- Preview media directly inside dashboard
+- Secure download system
+- Download counter tracking
 
-### 📊 Analytics Dashboard
-- Total clicks & downloads
-- Click analytics for last 7 days
-- **Live chart updates without page refresh**
-- User-specific analytics
+<!-- --- -->
 
-### ⚡ Live Chart Updates
-- Chart.js + AJAX polling
-- Updates automatically every few seconds
+## 📊 Live Analytics Dashboard
+- Total clicks overview
+- Total downloads overview
+- Last 7 days click analytics
+- User-specific data
+- Real-time updates using AJAX polling
 - No page reload required
 
 <!-- --- -->
 
-## 🛠️ Tech Stack
+## ⚡ Live Chart Engine
+
+- Chart.js line charts
+- Auto-refresh every few seconds
+- API-driven analytics
+- Lightweight and efficient
+
+---
+
+# 🛠️ Tech Stack
 
 | Layer        | Technology |
-|--------------|-----------|
-| Backend      | Laravel |
-| Frontend     | Blade |
-| Database     | MySQL |
-| Charts       | Chart.js |
-| Storage      | Local |
-| Auth         | Custom |
+|-------------|------------|
+| Backend     | Laravel 12 |
+| Frontend    | Blade |
+| Charts      | Chart.js |
+| Database    | MySQL |
+| Storage     | Local (public disk) |
+| Auth        | Custom Session-based |
 
 <!-- --- -->
 
-## 🔄 Click Tracking Flow
+# 🔄 Click Tracking Flow
 
 User clicks short link\
 ↓
